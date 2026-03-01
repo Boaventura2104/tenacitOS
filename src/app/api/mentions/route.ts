@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 const TASKS_PATH = path.join(process.cwd(), 'data', 'tasks.json');
 const MEMOS_PATH = path.join(process.cwd(), 'data', 'memos.json');
 
@@ -28,7 +30,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const agent = searchParams.get('agent');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
 
     if (!agent) {
       return NextResponse.json({ error: 'agent parameter required' }, { status: 400 });

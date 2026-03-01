@@ -12,7 +12,7 @@
  *   npx ts-node scripts/autonomous-loop.ts --agent jobs --dry-run
  */
 
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -274,19 +274,18 @@ async function logActivity(
   status: "success" | "error" | "pending"
 ): Promise<void> {
   try {
-    const body = JSON.stringify({
-      type: "task",
-      description,
-      status,
-      agent: agentId,
-      metadata: { source: "autonomous-loop" },
+    await fetch(`${MC_URL}/api/activities`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "task",
+        description,
+        status,
+        agent: agentId,
+        metadata: { source: "autonomous-loop" },
+      }),
+      signal: AbortSignal.timeout(5000),
     });
-
-    // Use curl to avoid requiring http client dep
-    execSync(
-      `curl -s -X POST "${MC_URL}/api/activities" -H "Content-Type: application/json" -d '${body.replace(/'/g, "'\\''")}' > /dev/null 2>&1`,
-      { timeout: 5000 }
-    );
   } catch {
     // Non-fatal: activity logging failure should not stop the agent
   }
@@ -294,17 +293,15 @@ async function logActivity(
 
 // ── Execute agent via openclaw ────────────────────────────────────────────────
 function executeAgent(agentId: string, prompt: string): string {
-  const escaped = prompt.replace(/'/g, "'\\''");
-  const cmd = `openclaw agent run --agent ${agentId} --message '${escaped}' 2>&1`;
-
   console.log(`\n[SeedMoney] Executing agent: ${agentId}`);
   console.log(`[SeedMoney] Command: openclaw agent run --agent ${agentId} --message "..."`);
 
   try {
-    const output = execSync(cmd, {
-      timeout: 300000, // 5 min max
-      encoding: "utf-8",
-    });
+    const output = execFileSync(
+      "openclaw",
+      ["agent", "run", "--agent", agentId, "--message", prompt],
+      { timeout: 300_000, encoding: "utf-8" }
+    );
     return output;
   } catch (err: unknown) {
     const error = err as { stdout?: string; stderr?: string; message?: string };

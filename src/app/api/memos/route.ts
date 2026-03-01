@@ -3,6 +3,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 const MEMOS_PATH = path.join(process.cwd(), 'data', 'memos.json');
 
 export interface Memo {
@@ -38,7 +40,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const agent = searchParams.get('agent');
     const unreadOnly = searchParams.get('read') === 'false';
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
 
     let memos = await loadMemos();
 

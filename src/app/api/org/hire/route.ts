@@ -2,15 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 const ORG_PATH = path.join(process.cwd(), 'data', 'org-config.json');
 
 async function loadOrg() {
-  const data = await fs.readFile(ORG_PATH, 'utf-8');
-  return JSON.parse(data);
+  try {
+    const data = await fs.readFile(ORG_PATH, 'utf-8');
+    return JSON.parse(data);
+  } catch {
+    throw new Error('org-config.json not found. Run: npm run data:init');
+  }
 }
 
 async function saveOrg(org: unknown) {
-  await fs.writeFile(ORG_PATH, JSON.stringify(org, null, 2));
+  try {
+    await fs.writeFile(ORG_PATH, JSON.stringify(org, null, 2));
+  } catch {
+    throw new Error('Failed to save org-config.json');
+  }
 }
 
 // POST /api/org/hire — Hire a new agent
@@ -21,6 +31,11 @@ export async function POST(request: NextRequest) {
 
     if (!hiringManagerId || !name || !role) {
       return NextResponse.json({ error: 'Missing required fields: hiringManagerId, name, role' }, { status: 400 });
+    }
+
+    const VALID_ID = /^[a-z0-9_-]{1,32}$/;
+    if (!VALID_ID.test(hiringManagerId)) {
+      return NextResponse.json({ error: 'Invalid hiringManagerId format' }, { status: 400 });
     }
 
     const org = await loadOrg();

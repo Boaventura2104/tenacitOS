@@ -40,9 +40,12 @@ echo "✅ npx found"
 echo ""
 echo "Checking data files..."
 
+# Auto-initialize any missing data files from .example.json templates
+bash "${SCRIPT_DIR}/init-data.sh"
+
 for f in org-config.json agent-system-prompts.json financial-goals.json tiktok-pipeline.json memos.json tasks.json; do
   if [ ! -f "${DATA_DIR}/${f}" ]; then
-    echo "⚠️  ${f} missing — please ensure data files exist."
+    echo "❌ ${f} still missing after init. Check data/ directory."
     exit 1
   else
     echo "✅ ${f}"

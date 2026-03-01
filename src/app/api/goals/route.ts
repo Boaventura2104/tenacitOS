@@ -3,15 +3,25 @@ import fs from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 const GOALS_PATH = path.join(process.cwd(), 'data', 'financial-goals.json');
 
 async function loadGoals() {
-  const data = await fs.readFile(GOALS_PATH, 'utf-8');
-  return JSON.parse(data);
+  try {
+    const data = await fs.readFile(GOALS_PATH, 'utf-8');
+    return JSON.parse(data);
+  } catch {
+    throw new Error('financial-goals.json not found. Run: npm run data:init');
+  }
 }
 
 async function saveGoals(goals: unknown) {
-  await fs.writeFile(GOALS_PATH, JSON.stringify(goals, null, 2));
+  try {
+    await fs.writeFile(GOALS_PATH, JSON.stringify(goals, null, 2));
+  } catch {
+    throw new Error('Failed to save financial-goals.json');
+  }
 }
 
 export async function GET() {

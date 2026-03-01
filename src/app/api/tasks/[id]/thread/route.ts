@@ -3,15 +3,25 @@ import fs from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 const TASKS_PATH = path.join(process.cwd(), 'data', 'tasks.json');
 
 async function loadTasks() {
-  const data = await fs.readFile(TASKS_PATH, 'utf-8');
-  return JSON.parse(data);
+  try {
+    const data = await fs.readFile(TASKS_PATH, 'utf-8');
+    return JSON.parse(data);
+  } catch {
+    throw new Error('tasks.json not found. Run: npm run data:init');
+  }
 }
 
 async function saveTasks(tasks: unknown[]) {
-  await fs.writeFile(TASKS_PATH, JSON.stringify(tasks, null, 2));
+  try {
+    await fs.writeFile(TASKS_PATH, JSON.stringify(tasks, null, 2));
+  } catch {
+    throw new Error('Failed to save tasks.json');
+  }
 }
 
 function parseMentions(content: string): string[] {

@@ -3,6 +3,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 const TASKS_PATH = path.join(process.cwd(), 'data', 'tasks.json');
 
 export interface TaskDoc {
@@ -76,7 +78,7 @@ export async function GET(request: NextRequest) {
     const owner = searchParams.get('owner');
     const subscriber = searchParams.get('subscriber');
     const tag = searchParams.get('tag');
-    const limit = parseInt(searchParams.get('limit') || '100');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 200);
 
     let tasks = await loadTasks();
 

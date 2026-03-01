@@ -3,15 +3,25 @@ import fs from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 const TIKTOK_PATH = path.join(process.cwd(), 'data', 'tiktok-pipeline.json');
 
 async function loadTikTok() {
-  const data = await fs.readFile(TIKTOK_PATH, 'utf-8');
-  return JSON.parse(data);
+  try {
+    const data = await fs.readFile(TIKTOK_PATH, 'utf-8');
+    return JSON.parse(data);
+  } catch {
+    throw new Error('tiktok-pipeline.json not found. Run: npm run data:init');
+  }
 }
 
 async function saveTikTok(data: unknown) {
-  await fs.writeFile(TIKTOK_PATH, JSON.stringify(data, null, 2));
+  try {
+    await fs.writeFile(TIKTOK_PATH, JSON.stringify(data, null, 2));
+  } catch {
+    throw new Error('Failed to save tiktok-pipeline.json');
+  }
 }
 
 const PIPELINE_STAGES = ['idea', 'scripting', 'production', 'review', 'published', 'monetized'] as const;
