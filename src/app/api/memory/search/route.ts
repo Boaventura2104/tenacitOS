@@ -5,8 +5,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { OPENCLAW_DIR } from '@/lib/paths';
 
-const OPENCLAW_DIR = process.env.OPENCLAW_DIR || '/root/.openclaw';
 const WORKSPACE = path.join(OPENCLAW_DIR, 'workspace');
 
 interface SearchResult {

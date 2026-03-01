@@ -7,8 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { execSync } from 'child_process';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
-
-const OPENCLAW_DIR = process.env.OPENCLAW_DIR || '/root/.openclaw';
+import { OPENCLAW_DIR } from '@/lib/paths';
 
 interface RawSession {
   key: string;

@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { execSync } from "child_process";
+import { readFileSync } from "fs";
+import { join } from "path";
+import { OPENCLAW_DIR } from "@/lib/paths";
 
 function getGatewayConfig() {
   try {
-    const configRaw = require("fs").readFileSync((process.env.OPENCLAW_DIR || "/root/.openclaw") + "/openclaw.json", "utf-8");
+    const configRaw = readFileSync(join(OPENCLAW_DIR, "openclaw.json"), "utf-8");
     const config = JSON.parse(configRaw);
     return {
       token: config.gateway?.auth?.token || "",

@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 
 /**
@@ -5,8 +6,30 @@ import path from 'path';
  * In production (VPS), these default to /root/.openclaw paths.
  * For local development, override via environment variables.
  */
-export const OPENCLAW_DIR = process.env.OPENCLAW_DIR || '/root/.openclaw';
-export const OPENCLAW_WORKSPACE = process.env.OPENCLAW_WORKSPACE || path.join(OPENCLAW_DIR, 'workspace');
+const OPENCLAW_DIR_CANDIDATES = [
+  process.env.OPENCLAW_DIR,
+  process.env.OPENCLAW_HOME,
+  '/data/.openclaw',
+  '/root/.openclaw',
+];
+
+function detectOpenClawDir(): string {
+  for (const candidate of OPENCLAW_DIR_CANDIDATES) {
+    if (!candidate) continue;
+    try {
+      if (fs.existsSync(candidate)) {
+        return candidate;
+      }
+    } catch {
+      continue;
+    }
+  }
+  return process.env.OPENCLAW_DIR || '/root/.openclaw';
+}
+
+export const OPENCLAW_DIR = detectOpenClawDir();
+export const OPENCLAW_WORKSPACE =
+  process.env.OPENCLAW_WORKSPACE || path.join(OPENCLAW_DIR, 'workspace');
 export const OPENCLAW_CONFIG = path.join(OPENCLAW_DIR, 'openclaw.json');
 export const OPENCLAW_MEDIA = path.join(OPENCLAW_DIR, 'media');
 

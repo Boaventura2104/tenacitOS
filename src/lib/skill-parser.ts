@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { OPENCLAW_DIR, WORKSPACE_SKILLS_PATH } from '@/lib/paths';
 
 export interface SkillInfo {
   id: string;
@@ -37,9 +38,20 @@ interface SkillsConfig {
   skills: ConfiguredSkill[];
 }
 
+interface OpenClawAgentEntry {
+  id?: string;
+  workspace?: string;
+}
+
+interface OpenClawConfig {
+  agents?: {
+    list?: OpenClawAgentEntry[];
+  };
+}
+
 const CONFIG_PATH = path.join(process.cwd(), 'data', 'configured-skills.json');
 const DEFAULT_SYSTEM_PATH = '/usr/lib/node_modules/openclaw/skills';
-const DEFAULT_WORKSPACE_PATH = (process.env.OPENCLAW_DIR || '/root/.openclaw') + '/workspace-infra/skills';
+const DEFAULT_WORKSPACE_PATH = WORKSPACE_SKILLS_PATH;
 
 /**
  * Parse SKILL.md front matter (YAML between --- delimiters)
@@ -175,17 +187,22 @@ export function parseSkill(skillPath: string, skillName: string, agents: string[
  */
 function buildAgentSkillMap(): Map<string, string[]> {
   const map = new Map<string, string[]>();
-  const openclawDir = process.env.OPENCLAW_DIR || '/root/.openclaw';
+  const openclawDir = OPENCLAW_DIR;
 
   // Agent workspaces: workspace, workspace-infra, workspace-social, etc.
   // Read from openclaw.json if possible
-  let agentList: Array<{ id: string; workspace: string }> = [];
+  const agentList: Array<{ id: string; workspace: string }> = [];
   try {
-    const openclawConfig = JSON.parse(fs.readFileSync(path.join(openclawDir, 'openclaw.json'), 'utf-8'));
-    agentList = (openclawConfig?.agents?.list || []).map((a: any) => ({
-      id: a.id,
-      workspace: a.workspace || path.join(openclawDir, 'workspace'),
-    }));
+    const configContent = fs.readFileSync(path.join(openclawDir, 'openclaw.json'), 'utf-8');
+    const openclawConfig = JSON.parse(configContent) as OpenClawConfig;
+    const entries = openclawConfig?.agents?.list || [];
+    for (const entry of entries) {
+      if (!entry?.id) continue;
+      agentList.push({
+        id: entry.id,
+        workspace: entry.workspace || path.join(openclawDir, 'workspace'),
+      });
+    }
   } catch {
     // Fallback: scan directories
     try {
@@ -220,13 +237,13 @@ function buildAgentSkillMap(): Map<string, string[]> {
 /**
  * Load configured skills from config file
  */
-function loadConfiguredSkills(): ConfiguredSkill[] {
+function loadConfiguredSkills(): SkillsConfig | null {
   try {
     const content = fs.readFileSync(CONFIG_PATH, 'utf-8');
-    const config: SkillsConfig = JSON.parse(content);
-    return config.skills || [];
+    const config = JSON.parse(content) as SkillsConfig;
+    return config;
   } catch {
-    return [];
+    return null;
   }
 }
 
@@ -235,20 +252,22 @@ function loadConfiguredSkills(): ConfiguredSkill[] {
  */
 export function scanAllSkills(): SkillInfo[] {
   const skills: SkillInfo[] = [];
-  
+  const config = loadConfiguredSkills();
+  if (!config) {
+    console.warn(`Unable to load configured skills from ${CONFIG_PATH}`);
+    return skills;
+  }
+
   try {
-    const content = fs.readFileSync(CONFIG_PATH, 'utf-8');
-    const config: SkillsConfig = JSON.parse(content);
-    
     const systemPath = config.systemSkillsPath || DEFAULT_SYSTEM_PATH;
     const workspacePath = config.workspaceSkillsPath || DEFAULT_WORKSPACE_PATH;
 
     // Build agent->skills map for workspace skills
     const agentSkillMap = buildAgentSkillMap();
-    
+
     for (const { name, location } of config.skills) {
       let skillPath: string;
-      
+
       // Resolve path based on location type
       if (location === 'system') {
         skillPath = path.join(systemPath, name);
@@ -258,7 +277,7 @@ export function scanAllSkills(): SkillInfo[] {
         // Full path provided
         skillPath = location;
       }
-      
+
       if (!fs.existsSync(skillPath)) {
         console.warn(`Skill not found: ${name} at ${skillPath}`);
         continue;
@@ -266,13 +285,13 @@ export function scanAllSkills(): SkillInfo[] {
 
       // Determine which agents have this skill
       const agents = agentSkillMap.get(name) || [];
-      
+
       const skill = parseSkill(skillPath, name, agents);
       if (skill) {
         skills.push(skill);
       }
     }
-    
+
     // Sort by source (workspace first), then name
     skills.sort((a, b) => {
       if (a.source !== b.source) {
@@ -280,10 +299,10 @@ export function scanAllSkills(): SkillInfo[] {
       }
       return a.name.localeCompare(b.name);
     });
-    
+
   } catch (error) {
     console.error('Error scanning skills:', error);
   }
-  
+
   return skills;
 }

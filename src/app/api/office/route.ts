@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readFileSync, statSync, readdirSync } from "fs";
 import { join } from "path";
+import { OPENCLAW_DIR } from "@/lib/paths";
 
 export const dynamic = "force-dynamic";
 
@@ -62,7 +63,7 @@ async function getAgentStatusFromGateway(): Promise<
   Record<string, { isActive: boolean; currentTask: string; lastSeen: number }>
 > {
   try {
-    const configPath = (process.env.OPENCLAW_DIR || "/root/.openclaw") + "/openclaw.json";
+    const configPath = join(OPENCLAW_DIR, "openclaw.json");
     const config = JSON.parse(readFileSync(configPath, "utf-8"));
     const gatewayToken = config.gateway?.auth?.token;
 
@@ -183,7 +184,7 @@ function getAgentStatusFromFiles(
 
 export async function GET() {
   try {
-    const configPath = (process.env.OPENCLAW_DIR || "/root/.openclaw") + "/openclaw.json";
+    const configPath = join(OPENCLAW_DIR, "openclaw.json");
     const config = JSON.parse(readFileSync(configPath, "utf-8"));
 
     // Try gateway first, fallback to file-based

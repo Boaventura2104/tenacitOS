@@ -272,3 +272,80 @@ export function getActivityStats(): {
 
   return { total, today, byType, byStatus };
 }
+
+export interface ActivityHeatmapEntry {
+  day: string;
+  count: number;
+}
+
+export function getActivityHeatmap(days = 365): ActivityHeatmapEntry[] {
+  try {
+    const db = getDb();
+    const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    return db.prepare(
+      `
+      SELECT DATE(timestamp) as day, COUNT(*) as count
+      FROM activities
+      WHERE timestamp >= ?
+      GROUP BY DATE(timestamp)
+      ORDER BY day
+    `,
+    ).all(cutoff) as ActivityHeatmapEntry[];
+  } catch (error) {
+    console.warn('[activities-db] Failed to build heatmap', error);
+    return [];
+  }
+}
+
+export interface ActivityTrendEntry {
+  day: string;
+  count: number;
+  success: number;
+  errors: number;
+}
+
+export function getActivityTrend(days = 7): ActivityTrendEntry[] {
+  try {
+    const db = getDb();
+    const span = `-${days} days`;
+    return db.prepare(
+      `
+      SELECT DATE(timestamp) as day, COUNT(*) as count,
+             SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as success,
+             SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END) as errors
+      FROM activities
+      WHERE timestamp >= datetime('now', ?)
+      GROUP BY DATE(timestamp)
+      ORDER BY day DESC
+    `,
+    ).all(span) as ActivityTrendEntry[];
+  } catch (error) {
+    console.warn('[activities-db] Failed to build trend', error);
+    return [];
+  }
+}
+
+export interface ActivityHourlyEntry {
+  hour: string;
+  count: number;
+}
+
+export function getHourlyActivity(days = 30): ActivityHourlyEntry[] {
+  try {
+    const db = getDb();
+    const span = `-${days} days`;
+    return db.prepare(
+      `
+      SELECT strftime('%H', timestamp) as hour, COUNT(*) as count
+      FROM activities
+      WHERE timestamp >= datetime('now', ?)
+      GROUP BY hour
+      ORDER BY count DESC
+      LIMIT 24
+    `,
+    ).all(span) as ActivityHourlyEntry[];
+  } catch (error) {
+    console.warn('[activities-db] Failed to build hourly chart', error);
+    return [];
+  }
+}
