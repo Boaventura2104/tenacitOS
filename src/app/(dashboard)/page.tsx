@@ -283,6 +283,7 @@ export default function DashboardPage() {
           </div>
           <div className="p-4 grid grid-cols-2 gap-2">
             {[
+              { href: "/kanban", icon: Puzzle, label: "Kanban Board", color: "#a78bfa" },
               { href: "/cron", icon: Calendar, label: "Cron Jobs", color: "#a78bfa" },
               { href: "/actions", icon: Zap, label: "Quick Actions", color: "var(--accent)" },
               { href: "/system", icon: Server, label: "System", color: "var(--success)" },
