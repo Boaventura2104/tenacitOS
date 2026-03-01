@@ -26,18 +26,15 @@ export async function GET() {
     });
   } catch (error) {
     console.error('[activities/stats] Error:', error);
-    return NextResponse.json(
-      {
-        total: 0,
-        today: 0,
-        byType: {},
-        byStatus: {},
-        heatmap: [],
-        trend: [],
-        hourly: [],
-        error: 'Failed to get stats',
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      total: 0,
+      today: 0,
+      byType: {},
+      byStatus: {},
+      heatmap: [],
+      trend: [],
+      hourly: [],
+      error: 'Failed to get stats',
+    });
   }
 }

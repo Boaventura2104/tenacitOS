@@ -9,6 +9,28 @@ import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 
+interface OpenClawSessionEntry {
+  key: string;
+  sessionId: string;
+  model?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+  updatedAt?: number;
+  percentUsed?: number;
+}
+
+interface OpenClawAgentSessions {
+  agentId: string;
+  recent?: OpenClawSessionEntry[];
+}
+
+interface OpenClawStatus {
+  sessions?: {
+    byAgent?: OpenClawAgentSessions[];
+  };
+}
+
 const execAsync = promisify(exec);
 
 export interface SessionData {
@@ -38,10 +60,10 @@ export interface UsageSnapshot {
 /**
  * Get current OpenClaw status with session data
  */
-export async function getOpenClawStatus(): Promise<any> {
+export async function getOpenClawStatus(): Promise<OpenClawStatus> {
   try {
     const { stdout } = await execAsync("openclaw status --json");
-    return JSON.parse(stdout);
+    return JSON.parse(stdout) as OpenClawStatus;
   } catch (error) {
     console.error("Error getting OpenClaw status:", error);
     throw error;
@@ -51,7 +73,7 @@ export async function getOpenClawStatus(): Promise<any> {
 /**
  * Extract session data from status
  */
-export function extractSessionData(status: any): SessionData[] {
+export function extractSessionData(status: OpenClawStatus): SessionData[] {
   const sessions: SessionData[] = [];
 
   if (!status.sessions?.byAgent) {
@@ -70,7 +92,7 @@ export function extractSessionData(status: any): SessionData[] {
         inputTokens: session.inputTokens || 0,
         outputTokens: session.outputTokens || 0,
         totalTokens: session.totalTokens || 0,
-        updatedAt: session.updatedAt,
+        updatedAt: session.updatedAt ?? Date.now(),
         percentUsed: session.percentUsed || 0,
       });
     }

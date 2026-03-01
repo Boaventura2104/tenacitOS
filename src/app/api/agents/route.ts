@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { readFileSync } from "fs";
-import { join } from "path";
-import { OPENCLAW_DIR } from "@/lib/paths";
+import { existsSync, readFileSync, statSync } from "fs";
+import { isAbsolute, join } from "path";
+import { OPENCLAW_DIR, OPENCLAW_WORKSPACE } from "@/lib/paths";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +37,22 @@ const DEFAULT_AGENT_CONFIG: Record<string, { emoji: string; color: string; name?
   },
 };
 
+function ensureAbsoluteWorkspace(workspace: string): string {
+  if (!workspace) return OPENCLAW_WORKSPACE;
+  if (isAbsolute(workspace)) return workspace;
+  return join(OPENCLAW_DIR, workspace);
+}
+
+function resolveAgentWorkspace(agent: any): string {
+  if (agent?.workspace) {
+    return ensureAbsoluteWorkspace(agent.workspace);
+  }
+  if (agent?.id === "main") {
+    return OPENCLAW_WORKSPACE;
+  }
+  return join(OPENCLAW_DIR, `workspace-${agent.id}`);
+}
+
 /**
  * Get agent display info (emoji, color, name) from openclaw.json or defaults
  */
@@ -62,39 +78,45 @@ export async function GET() {
     const configPath = join(OPENCLAW_DIR, "openclaw.json");
     const config = JSON.parse(readFileSync(configPath, "utf-8"));
 
-    // Get agents from config
-    const agents: Agent[] = config.agents.list.map((agent: any) => {
-      const agentInfo = getAgentDisplayInfo(agent.id, agent);
+    const agentList = Array.isArray(config.agents?.list)
+      ? config.agents.list
+      : [];
+    const agentDefaults = config.agents?.defaults;
+    const telegramAccounts = config.channels?.telegram?.accounts || {};
+    const telegramDmPolicy =
+      config.channels?.telegram?.dmPolicy || "pairing";
 
-      // Get telegram account info
-      const telegramAccount =
-        config.channels?.telegram?.accounts?.[agent.id];
+    const agents: Agent[] = agentList.map((agent: any) => {
+      const agentInfo = getAgentDisplayInfo(agent.id, agent);
+      const workspacePath = resolveAgentWorkspace(agent);
+
+      const telegramAccount = telegramAccounts[agent.id];
       const botToken = telegramAccount?.botToken;
 
-      // Check if agent has recent activity
-      const memoryPath = join(agent.workspace, "memory");
-      let lastActivity = undefined;
+      let lastActivity: string | undefined;
       let status: "online" | "offline" = "offline";
+      const today = new Date().toISOString().split("T")[0];
+      const memoryFile = join(workspacePath, "memory", `${today}.md`);
 
-      try {
-        const today = new Date().toISOString().split("T")[0];
-        const memoryFile = join(memoryPath, `${today}.md`);
-        const stat = require("fs").statSync(memoryFile);
-        lastActivity = stat.mtime.toISOString();
-        // Consider online if activity within last 5 minutes
-        status =
-          Date.now() - stat.mtime.getTime() < 5 * 60 * 1000
-            ? "online"
-            : "offline";
-      } catch (e) {
-        // No recent activity
+      if (existsSync(memoryFile)) {
+        try {
+          const stat = statSync(memoryFile);
+          lastActivity = stat.mtime.toISOString();
+          status =
+            Date.now() - stat.mtime.getTime() < 5 * 60 * 1000
+              ? "online"
+              : "offline";
+        } catch (error) {
+          console.warn("Failed to stat memory file:", error);
+        }
       }
 
-      // Get details of allowed subagents
-      const allowAgents = agent.subagents?.allowAgents || [];
+      const allowAgents = Array.isArray(agent.subagents?.allowAgents)
+        ? agent.subagents.allowAgents
+        : [];
+
       const allowAgentsDetails = allowAgents.map((subagentId: string) => {
-        // Find subagent in config
-        const subagentConfig = config.agents.list.find(
+        const subagentConfig = agentList.find(
           (a: any) => a.id === subagentId
         );
         if (subagentConfig) {
@@ -106,7 +128,6 @@ export async function GET() {
             color: subagentInfo.color,
           };
         }
-        // Fallback if subagent not found in config
         const fallbackInfo = getAgentDisplayInfo(subagentId, null);
         return {
           id: subagentId,
@@ -122,27 +143,22 @@ export async function GET() {
         emoji: agentInfo.emoji,
         color: agentInfo.color,
         model:
-          agent.model?.primary || config.agents.defaults.model.primary,
-        workspace: agent.workspace,
-        dmPolicy:
-          telegramAccount?.dmPolicy ||
-          config.channels?.telegram?.dmPolicy ||
-          "pairing",
+          agent.model?.primary || agentDefaults?.model?.primary ||
+          "openai-codex/gpt-5.1-codex-mini",
+        workspace: workspacePath,
+        dmPolicy: telegramAccount?.dmPolicy || telegramDmPolicy,
         allowAgents,
         allowAgentsDetails,
         botToken: botToken ? "configured" : undefined,
         status,
         lastActivity,
-        activeSessions: 0, // TODO: get from sessions API
+        activeSessions: 0,
       };
     });
 
     return NextResponse.json({ agents });
   } catch (error) {
     console.error("Error reading agents:", error);
-    return NextResponse.json(
-      { error: "Failed to load agents" },
-      { status: 500 }
-    );
+    return NextResponse.json({ agents: [] });
   }
 }
