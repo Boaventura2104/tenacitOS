@@ -1,0 +1,53 @@
+{
+  "company": "SeedMoney",
+  "bootstrapGoal": {
+    "id": "goal-bootstrap-50",
+    "name": "Bootstrap $50",
+    "description": "Meta inicial de $50 em receita para autoinvestimento e validação do modelo da SeedMoney",
+    "targetAmount": 50.00,
+    "currentRevenue": 0.00,
+    "currency": "USD",
+    "startDate": "2026-03-01",
+    "targetDate": null,
+    "status": "active",
+    "milestones": [
+      { "id": "m1", "amount": 5.00, "label": "Primeira receita", "reached": false, "reachedAt": null },
+      { "id": "m2", "amount": 10.00, "label": "Prova de conceito", "reached": false, "reachedAt": null },
+      { "id": "m3", "amount": 25.00, "label": "Metade do caminho", "reached": false, "reachedAt": null },
+      { "id": "m4", "amount": 50.00, "label": "Meta atingida! Reinvestir", "reached": false, "reachedAt": null }
+    ]
+  },
+  "growthGoals": [
+    {
+      "id": "goal-100",
+      "name": "Growth $100",
+      "description": "Dobrar o bootstrap inicial",
+      "targetAmount": 100.00,
+      "currentRevenue": 0.00,
+      "status": "pending",
+      "unlocksAfter": "goal-bootstrap-50"
+    },
+    {
+      "id": "goal-500",
+      "name": "Scale $500",
+      "description": "Atingir $500 com estratégias comprovadas",
+      "targetAmount": 500.00,
+      "currentRevenue": 0.00,
+      "status": "pending",
+      "unlocksAfter": "goal-100"
+    }
+  ],
+  "revenueSources": {
+    "tiktok_creator_fund": { "total": 0.00, "label": "TikTok Creator Fund", "color": "#FF2D55", "active": true },
+    "affiliate": { "total": 0.00, "label": "Links de Afiliado", "color": "#FF9500", "active": true },
+    "tiktok_shop": { "total": 0.00, "label": "TikTok Shop", "color": "#34C759", "active": false },
+    "sponsorship": { "total": 0.00, "label": "Patrocínios", "color": "#007AFF", "active": false },
+    "other": { "total": 0.00, "label": "Outros", "color": "#AF52DE", "active": false }
+  },
+  "revenueLog": [],
+  "totalRevenue": 0.00,
+  "totalApiCosts": 0.00,
+  "netProfit": 0.00,
+  "createdAt": "2026-03-01T00:00:00Z",
+  "updatedAt": "2026-03-01T00:00:00Z"
+}

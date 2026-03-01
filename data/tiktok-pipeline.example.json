@@ -1,0 +1,91 @@
+{
+  "company": "SeedMoney",
+  "account": {
+    "username": null,
+    "followers": 0,
+    "following": 0,
+    "likes": 0,
+    "videos": 0,
+    "connectedAt": null
+  },
+  "strategies": {
+    "creator_fund": {
+      "id": "creator_fund",
+      "name": "TikTok Creator Fund",
+      "description": "Monetizar via Creator Fund com vídeos de conteúdo original",
+      "active": true,
+      "totalRevenue": 0.00,
+      "estimatedRpm": 0.02,
+      "notes": "RPM estimado $0.02-0.05 por 1000 views"
+    },
+    "affiliate": {
+      "id": "affiliate",
+      "name": "Links de Afiliado",
+      "description": "Promover produtos via links de afiliado (Amazon, Hotmart, etc.)",
+      "active": true,
+      "totalRevenue": 0.00,
+      "platforms": ["Amazon Associates", "Hotmart", "Monetizze"],
+      "notes": "Foco em produtos digitais com comissão >30%"
+    },
+    "tiktok_shop": {
+      "id": "tiktok_shop",
+      "name": "TikTok Shop",
+      "description": "Vender produtos físicos ou digitais diretamente no TikTok",
+      "active": false,
+      "totalRevenue": 0.00,
+      "notes": "Ativar quando atingir 1000 seguidores"
+    }
+  },
+  "niches": [
+    { "id": "finance", "name": "Finanças Pessoais", "active": true, "contentCount": 0, "avgViews": 0 },
+    { "id": "productivity", "name": "Produtividade & IA", "active": true, "contentCount": 0, "avgViews": 0 },
+    { "id": "tech", "name": "Tecnologia & Apps", "active": true, "contentCount": 0, "avgViews": 0 }
+  ],
+  "pipeline": {
+    "idea": [
+      {
+        "id": "idea-001",
+        "title": "5 apps de IA que ninguém conhece mas deveriam",
+        "niche": "tech",
+        "strategy": "affiliate",
+        "hook": "Você tá deixando dinheiro na mesa não usando esses apps",
+        "format": "listicle",
+        "estimatedViews": 5000,
+        "addedBy": "ogilvy",
+        "addedAt": "2026-03-01T00:00:00Z"
+      },
+      {
+        "id": "idea-002",
+        "title": "Como economizar $100 esse mês com IA",
+        "niche": "finance",
+        "strategy": "affiliate",
+        "hook": "Eu economizei $100 esse mês fazendo isso todo dia",
+        "format": "tutorial",
+        "estimatedViews": 8000,
+        "addedBy": "ogilvy",
+        "addedAt": "2026-03-01T00:00:00Z"
+      },
+      {
+        "id": "idea-003",
+        "title": "IA criou minha startup do zero em 24h — SeedMoney",
+        "niche": "productivity",
+        "strategy": "creator_fund",
+        "hook": "Deixei a IA gerenciar minha empresa por 24 horas. O resultado foi...",
+        "format": "storytelling",
+        "estimatedViews": 20000,
+        "addedBy": "jobs",
+        "addedAt": "2026-03-01T00:00:00Z"
+      }
+    ],
+    "scripting": [],
+    "production": [],
+    "review": [],
+    "published": [],
+    "monetized": []
+  },
+  "publishedContent": [],
+  "totalViews": 0,
+  "totalRevenue": 0.00,
+  "createdAt": "2026-03-01T00:00:00Z",
+  "updatedAt": "2026-03-01T00:00:00Z"
+}
